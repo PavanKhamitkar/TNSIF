@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-Player Dice Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1a1a2e, #16213e);
+            color: #fff;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .setup-screen, .game-screen, .result-screen {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            margin-bottom: 2rem;
+        }
+
+        h1, h2 {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: #00ff88;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        input, button {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            background: #00ff88;
+            color: #1a1a2e;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #00cc6a;
+            transform: translateY(-2px);
+        }
+
+        .player-turn {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .dice {
+            font-size: 4rem;
+            margin: 1rem 0;
+            animation: roll 0.5s ease;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        th {
+            background: rgba(0, 255, 136, 0.1);
+            color: #00ff88;
+        }
+
+        .winner {
+            background: rgba(0, 255, 136, 0.2);
+            color: #00ff88;
+            font-weight: bold;
+        }
+
+        .round-history {
+            margin-top: 2rem;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="setup-screen">
+            <h1>🎲 Dice Game Setup</h1>
+            <div class="input-group">
+                <input type="number" id="rounds" placeholder="Enter number of rounds" min="1">
+            </div>
+            <div class="input-group">
+                <input type="text" id="player1" placeholder="Player 1 name">
+                <input type="text" id="player2" placeholder="Player 2 name">
+                <input type="text" id="player3" placeholder="Player 3 name">
+                <input type="text" id="player4" placeholder="Player 4 name">
+            </div>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+
+        <div class="game-screen hidden">
+            <h2>Round <span id="currentRound">1</span></h2>
+            <div class="player-turn">
+                <h3 id="currentPlayer">Player 1's Turn</h3>
+                <div class="dice" id="dice">🎲</div>
+                <button onclick="rollDice()">Roll Dice</button>
+            </div>
+        </div>
+
+        <div class="result-screen hidden">
+            <h2>Game Results</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Total Score</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+
+            <div class="round-history">
+                <h3>Round History</h3>
+                <table id="roundHistory">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Player</th>
+                            <th>Roll</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gameState = {
+            players: [],
+            scores: {},
+            currentRound: 1,
+            totalRounds: 0,
+            currentPlayer: 0,
+            roundHistory: [],
+            playersInRound: 0
+        };
+
+        function startGame() {
+            const rounds = parseInt(document.getElementById('rounds').value);
+            if (!rounds || rounds < 1) {
+                alert('Please enter a valid number of rounds');
+                return;
+            }
+
+            gameState.totalRounds = rounds;
+            gameState.players = [];
+            gameState.scores = {};
+
+            for (let i = 1; i <= 4; i++) {
+                const playerName = document.getElementById(`player${i}`).value.trim() || `Player ${i}`;
+                gameState.players.push(playerName);
+                gameState.scores[playerName] = 0;
+            }
+
+            document.querySelector('.setup-screen').classList.add('hidden');
+            document.querySelector('.game-screen').classList.remove('hidden');
+            updateDisplay();
+        }
+
+        function rollDice() {
+            const roll = Math.floor(Math.random() * 6) + 1;
+            const currentPlayer = gameState.players[gameState.currentPlayer];
+            
+            gameState.scores[currentPlayer] += roll;
+            gameState.roundHistory.push({
+                round: gameState.currentRound,
+                player: currentPlayer,
+                roll: roll
+            });
+
+            document.getElementById('dice').textContent = getDiceFace(roll);
+            gameState.playersInRound++;
+
+            if (gameState.playersInRound === 4) {
+                gameState.playersInRound = 0;
+                gameState.currentRound++;
+                if (gameState.currentRound > gameState.totalRounds) {
+                    showResults();
+                    return;
+                }
+            }
+
+            gameState.currentPlayer = (gameState.currentPlayer + 1) % 4;
+            setTimeout(updateDisplay, 1000);
+        }
+
+        function getDiceFace(number) {
+            const diceFaces = ['⚀ - 1', '⚁ - 2', '⚂ - 3', '⚃ - 4', '⚄ - 5', '⚅ - 6'];
+            return diceFaces[number - 1];
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentRound').textContent = gameState.currentRound;
+            document.getElementById('currentPlayer').textContent = 
+                `${gameState.players[gameState.currentPlayer]}'s Turn`;
+            document.getElementById('dice').textContent = '🎲';
+        }
+
+        function showResults() {
+            document.querySelector('.game-screen').classList.add('hidden');
+            document.querySelector('.result-screen').classList.remove('hidden');
+
+            const resultsBody = document.getElementById('resultsBody');
+            const historyBody = document.getElementById('historyBody');
+            resultsBody.innerHTML = '';
+            historyBody.innerHTML = '';
+
+            // Sort players by score
+            const sortedPlayers = [...gameState.players].sort((a, b) => 
+                gameState.scores[b] - gameState.scores[a]
+            );
+
+            // Display final scores
+            sortedPlayers.forEach(player => {
+                const row = resultsBody.insertRow();
+                row.innerHTML = `
+                    <td>${player}</td>
+                    <td>${gameState.scores[player]}</td>
+                `;
+                if (player === sortedPlayers[0]) {
+                    row.classList.add('winner');
+                }
+            });
+
+            // Display round history
+            gameState.roundHistory.forEach(record => {
+                const row = historyBody.insertRow();
+                row.innerHTML = `
+                    <td>${record.round}</td>
+                    <td>${record.player}</td>
+                    <td>${getDiceFace(record.roll)}</td>
+                `;
+            });
+        }
+    </script>
+</body>
+</html>

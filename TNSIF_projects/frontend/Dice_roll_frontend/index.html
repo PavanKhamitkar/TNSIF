@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-Player Dice Game</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="setup-screen">
+            <h1>🎲 Dice Game Setup</h1>
+            <div class="input-group">
+                <input type="number" id="rounds" placeholder="Enter number of rounds" min="1">
+            </div>
+            <div class="input-group">
+                <input type="text" id="player1" placeholder="Player 1 name">
+                <input type="text" id="player2" placeholder="Player 2 name">
+                <input type="text" id="player3" placeholder="Player 3 name">
+                <input type="text" id="player4" placeholder="Player 4 name">
+            </div>
+            <button onclick="startGame()">Start Game</button>
+        </div>
+
+        <div class="game-screen hidden">
+            <h2>Round <span id="currentRound">1</span></h2>
+            <div class="player-turn">
+                <h3 id="currentPlayer">Player 1's Turn</h3>
+                <div class="dice" id="dice">🎲</div>
+                <button onclick="rollDice()">Roll Dice</button>
+            </div>
+        </div>
+
+        <div class="result-screen hidden">
+            <h2>Game Results</h2>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Player</th>
+                        <th>Total Score</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+
+            <div class="round-history">
+                <h3>Round History</h3>
+                <table id="roundHistory">
+                    <thead>
+                        <tr>
+                            <th>Round</th>
+                            <th>Player</th>
+                            <th>Roll</th>
+                        </tr>
+                    </thead>
+                    <tbody id="historyBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
+s
